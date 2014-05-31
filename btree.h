@@ -42,4 +42,5 @@ int btree_queue_empty( pbtree_queue q );
 void btree_queue_insert( pbtree_queue q, pbtree p );
 pbtree btree_queue_delete( pbtree_queue q);
 
-void levelorder_tranverse( pbtree proot, pbtree_queue q);
+void levelorder_tranverse_recursive( pbtree proot, pbtree_queue q);
+void levelorder_tranverse_nonrecursive( pbtree proot, pbtree_queue q);
