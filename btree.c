@@ -230,16 +230,19 @@ btree_queue_delete( pbtree_queue q )
 }
 
 /**
- * @brief levelorder_tranverse - visit tree's node by level order.
+ * @brief levelorder_tranverse_recursive - visit tree's node by level order.
  * @param proot pointer to the root of binary tree.
+ * @param q pointer to the queue of binary tree.
  * @return none.
  *
  * First visit the root node, ie, the first level, then visit root's
  * left and right child, that is, the second level, and then root's
  * children's children util the Nth level.
+ *
+ * This function is recursive.
  */
 void
-levelorder_tranverse( pbtree proot, pbtree_queue q)
+levelorder_tranverse_recursive( pbtree proot, pbtree_queue q)
 {
 	pbtree p = NULL;
 
@@ -253,7 +256,39 @@ levelorder_tranverse( pbtree proot, pbtree_queue q)
 	if ( !proot && btree_queue_empty(q) ) 
 		return;
 	p = btree_queue_delete( q );
-	levelorder_tranverse( p, q);
+	levelorder_tranverse_recursive( p, q);
+
+	return;
+}
+
+/**
+ * @brief levelorder_tranverse_nonrecursive - visit tree's node by level order.
+ * @param proot pointer to the root of binary tree.
+ * @param q pointer to the queue of binary tree.
+ * @return none.
+ *
+ * First visit the root node, ie, the first level, then visit root's
+ * left and right child, that is, the second level, and then root's
+ * children's children util the Nth level.
+ *
+ * This function is non-recursive.
+ */
+void
+levelorder_tranverse_nonrecursive( pbtree proot, pbtree_queue q)
+{
+	pbtree p = proot;
+
+	btree_queue_insert( q, p );
+	for ( ;!btree_queue_empty(q); ) {
+		p = btree_queue_delete( q );
+		if ( p ) {
+			printf("%c  ", p->data);
+			btree_queue_insert( q, p->lc);
+			btree_queue_insert( q, p->rc);
+		} else {
+			printf("$  ");
+		}
+	}
 
 	return;
 }
@@ -279,7 +314,8 @@ main()
 {
 	char *s = "ABC$$DE$G$$F$$$";
 	pbtree proot = NULL;
-	btree_queue bt_queue;
+	btree_queue queue_recursive;
+	btree_queue queue_nonrecursive;
 
 	proot = create_btree_by_preorder( &s );
 	if ( !proot ) {
@@ -293,8 +329,11 @@ main()
 	postorder_tranverse( proot );
 	printf("\n");
 	
-	btree_queue_init( &bt_queue );
-	levelorder_tranverse( proot, &bt_queue);
+	btree_queue_init( &queue_recursive );
+	levelorder_tranverse_recursive( proot, &queue_recursive);
+	printf("\n");
+	btree_queue_init( &queue_nonrecursive );
+	levelorder_tranverse_nonrecursive( proot, &queue_nonrecursive);
 	printf("\n");
 
 	return 0;
