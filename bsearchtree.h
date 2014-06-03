@@ -10,7 +10,7 @@
 /**
  * @brief define the binary search tree node and it's basic oprations
  *
- * 二叉排序树又称“二叉查找树”、“二叉搜索树”。
+ * 二叉排序树(Binary Sort Tree)又称为二叉查找树或二叉搜索树(Binary Search Tree).
  * 二叉排序树：或者是一棵空树，或者是具有下列性质的二叉树：
  * 	1. 若它的左子树不空，则左子树上所有结点的值均小于它的根结点的值；
  *	2. 若它的右子树不空，则右子树上所有结点的值均大于它的根结点的值；
