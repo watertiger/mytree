@@ -134,16 +134,19 @@ int delete_node( pbst *p )
 	pbst s = NULL;
 
 	if ( !(*p)->rc ) {
+		printf("rc null.\n");
 		q = *p;
 		(*p) = (*p)->lc;
 		if ( q )
 			free( q );
 	} else if ( !(*p)->lc ) {
+		printf("lc null.\n");
 		q = *p;
 		(*p) = (*p)->rc;
 		if ( q )
 			free( q );
 	} else {
+		printf("lc and rc exist.\n");
 		q = *p;
 		s = (*p)->lc;
 		for ( ; s->rc ; ) {
@@ -215,8 +218,11 @@ int
 main()
 {
 	int array[INIT_SIZE];
+	//int array1[INIT_SIZE] = {37,70,43,52,28,22,34,42,47,31};
+	int array1[12] = {34,22,28,31,52,37,70,43,42,47,45,46};
 	int i = 0;
 	pbst proot = NULL; /* 此处一定要显式置NULL，否则调用会出错，因为是根 */
+	pbst proot1 = NULL;
 	pbst pfind = NULL;
 
 	srand( (unsigned int)time(NULL) );
@@ -246,9 +252,16 @@ main()
 	bst_insert( &proot, 55 );
 	bst_show( proot, NULL );
 	printf("\n");
+
+	/* 创建二叉搜索树 */
+	for ( i = 0; i < 12; i++ ) {
+		bst_insert( &proot1, array1[i] );
+	}
+	bst_show( proot1, NULL );
+	printf("\n");
 	/* 删除新节点 */
-	bst_delete( &proot, 55 );
-	bst_show( proot, NULL );
+	bst_delete( &proot1, 52 );
+	bst_show( proot1, NULL );
 	printf("\n");
 
 	return 0;
