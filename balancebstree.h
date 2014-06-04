@@ -31,7 +31,9 @@ typedef struct _balance_binary_search_tree {
 }bbst_node, *pbbst;
 
 pbbst bbst_search1( pbbst proot, int key );
-int bbst_search2( pbbst proot, int key, pbbst *p);
+int bbst_search2( pbbst proot, int key, pbbst *p );
 int bbst_insert( pbbst *proot, int e, int *tf );
-int bbst_delete( pbbst *proot, int key);
+int bbst_delete( pbbst *proot, int key, int *sf );
+int bbst_destroy( pbbst *proot );
+void bbst_show( pbbst proot, pbbst parent );
 
