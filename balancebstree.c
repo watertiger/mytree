@@ -126,6 +126,11 @@ left_balance( pbbst *p )
 			plc->bf = EH;
 			r_rotate( p );
 			break;
+		/* 删除节点才会出现EH的情况 */
+		case EH:(*p)->bf = LH;
+			plc->bf = RH;
+			r_rotate( p );
+			break;
 		case RH:plcrc = plc->rc;
 			switch ( plcrc->bf ) {
 				case LH:(*p)->bf = RH;plc->bf = EH;break;
@@ -158,6 +163,11 @@ right_balance( pbbst *p )
 	switch( prc->bf ) {
 		case RH:(*p)->bf = EH;
 			prc->bf = EH;
+			l_rotate( p );
+			break;
+		/* 删除的时候才会出现EH的情况 */
+		case EH:(*p)->bf = RH;
+			prc->bf = LH;
 			l_rotate( p );
 			break;
 		case LH:prclc = prc->lc;
@@ -242,46 +252,118 @@ bbst_insert( pbbst *proot, int e, int *tf )
 	}
 	
 	return 1;
-/*
-	if ( bst_search2( *proot, e, &p ) ) {
-		return 0;
-	} else {
-		pe = ( pbbst )malloc( sizeof( bbst_node ) );
-		if ( !pe ) {
-			printf("No Memory!!\n");
-			return 0;
-		}
-		pe->data = e;
-		pe->bf = EH;
-		pe->lc = NULL;
-		pe->rc = NULL;
-		
-		if ( !p ) {
-			(*proot) = pe;
-			
-		} else if ( e < p->data ) {
-			p->lc = pe;
-			switch ( p->bf ) {
-				case LH:/*do something*;break;
-				case EH: p->bf = LH;/*do something*;break;
-				case RH: p->bf = EH;break;
-			}
-		} else {
-			p->rc = pe;
-			switch ( p->bf ) {
-				case LH: p->bf = EH;break;
-				case EH: p->bf = LH;/*do something*;break;
-				case RH: /*do something*;break;
-			}
-		}
-
-		return 1;
-	}
-*/
 }
 
 /**
- * @brief bbst_show - show all node's information of balance binary search tree.
+ * @brief bbst_delete - delete a node in balance binary search tree.
+ * @param proot pointer to the node of balance binary search tree.
+ * @param key the node's value to delete.
+ * @param sf the shorter flag to record the tree's height changing.
+ * @return 1 for succeed,
+ *	   0 for failure.
+ * 
+ * 从平衡二叉树中删除节点更加复杂。第一步需要找到要删除的节点x，并分情况处理：
+ * 	1、如果要删除的节点为叶子节点，直接删除
+ * 	2、如果要删除的节点为只有一棵子树的节点，直接删除，将子树接在双亲节点下
+ * 	3、如果要删除的节点既有左子树，又有右子树：
+ *	   如果节点的平衡因子为0或1，找到中序遍历该树时，待删节点的前继节点，
+ * 	   交换节点内容，删除前继节点；如果节点的平衡因子为-1，找到中序遍历
+ * 	   该树时，待删节点的后继节点，交换节点内容，删除后继节点
+ * 删除完成时，需要对树进行平衡调整。
+ *	
+ */
+int
+bbst_delete( pbbst *proot, int key, int *sf )
+{
+	pbbst pfind = NULL;
+	int tmpdata = 0;
+	if ( !(*proot) ) {
+		printf("the %d node does not exists.\n", key);
+		return 0;
+	} else {
+		if ( key == (*proot)->data ) {/*被删除节点存在，处理删除操作*/
+			if ( !(*proot)->lc ) {
+				if ( !(*proot)->rc ) { /* 叶子节点 */
+					free(*proot);
+					(*proot) = NULL;
+					*sf = 1;
+				} else { /* 仅存在右子树 */
+					pfind = *proot;
+					*proot = (*proot)->rc;
+					free( pfind );
+					*sf = 1;
+				}	
+			} else {
+				if ( !(*proot)->rc ) { /* 仅存在左子树 */
+					pfind = *proot;
+					*proot = (*proot)->rc;
+					free( pfind );
+					*sf = 1;
+				} else { /* 存在左右子树 */
+					switch ( (*proot)->bf ) {
+						case LH:case EH:
+							pfind = (*proot)->lc;
+							for ( ;pfind->rc; ) {
+								pfind = pfind->rc;
+							}
+							tmpdata = pfind->data;
+							pfind->data = (*proot)->data;
+							(*proot)->data = tmpdata;
+							/* 不能直接释放空间，需要回溯调整树的平衡 */
+							bbst_delete( &(*proot)->lc, key, sf );
+							break;
+						case RH:
+							pfind = (*proot)->rc;
+							for ( ;pfind->lc; ) 
+								pfind = pfind->lc;
+							tmpdata = pfind->data;
+							pfind->data = (*proot)->data;
+							(*proot)->data = tmpdata;
+							bbst_delete( &(*proot)->rc, key, sf );
+							break;
+					}
+				}	
+			}
+		} else if ( key < (*proot)->data ) {
+			if (!bbst_delete( &(*proot)->lc, key, sf) )
+				return 0;
+			if ( *sf ) {
+				switch ( (*proot)->bf ) {
+					case LH:(*proot)->bf = EH;
+						*sf = 1;
+						break;
+					case EH:(*proot)->bf = RH;
+						*sf = 0;
+						break;
+					case RH:right_balance( proot );
+						*sf = 0;
+						break;
+				}
+			}
+		} else {
+			if (!bbst_delete( &(*proot)->rc, key, sf) )
+				return 0;
+			if ( *sf ) {
+				switch ( (*proot)->bf ) {
+					case LH:left_balance( proot );
+						*sf = 0;
+						break;
+					case EH:(*proot)->bf = LH;
+						*sf = 0;
+						break;
+					case RH:(*proot)->bf = EH;
+						*sf = 1;
+						break;
+				}
+			}
+		}
+	}
+
+	return 1;
+}
+
+/**
+ * @brief bbst_show - how all node's information of balance binary search tree.
  * @param proot pointer to the node of balance binary search tree.
  * @param parent pointer to the parent node of node which pointer proot point to
  * @return none.
@@ -316,6 +398,7 @@ main()
 	int array[INIT_SIZE];
 	int i = 0;
 	int taller_flag = 0;
+	int shorter_flag = 0;
 	pbbst proot = NULL; /* 此处一定要显式置NULL，否则调用会出错，因为是根 */
 	pbbst pfind = NULL;
 
@@ -342,6 +425,10 @@ main()
 		printf("Node found. it's %-4d(%+2d).\n", pfind->data, pfind->bf);
 	else
 		printf("Node not exists.\n");
+
+	bbst_delete( &proot, array[5], &shorter_flag );
+	bbst_show( proot, NULL );	
+
 
 	return 0;
 }
